@@ -63,6 +63,8 @@
       <version.cdi>1.1-20130305</version.cdi>
       <version.jboss.spec>3.0.1.Final</version.jboss.spec>
       <version.jboss.modules>1.1.3.GA</version.jboss.modules>
+      <version.jboss.logging>3.1.3.GA</version.jboss.logging>
+      <version.jboss.logging.tools>1.1.0.Final</version.jboss.logging.tools>
       <version.junit>4.11</version.junit>
       <version.mvel>2.1.0.Final</version.mvel>
       <version.shrinkwrap.resolver>2.0.0-beta-2</version.shrinkwrap.resolver>
@@ -137,6 +139,18 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-ext</artifactId>
             <version>${version.slf4j}</version>
+         </dependency>
+
+         <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging</artifactId>
+            <version>${version.jboss.logging}</version>
+         </dependency>
+
+         <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging-processor</artifactId>
+            <version>${version.jboss.logging.tools}</version>
          </dependency>
 
          <dependency>

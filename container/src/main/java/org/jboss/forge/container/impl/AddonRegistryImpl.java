@@ -11,8 +11,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.jboss.forge.container.Addon;
 import org.jboss.forge.container.AddonDependency;
@@ -21,8 +19,9 @@ import org.jboss.forge.container.AddonId;
 import org.jboss.forge.container.AddonRegistry;
 import org.jboss.forge.container.AddonRepository;
 import org.jboss.forge.container.Forge;
+import org.jboss.forge.container.ForgeLogger;
+import org.jboss.forge.container.ForgeMessages;
 import org.jboss.forge.container.Status;
-import org.jboss.forge.container.exception.ContainerException;
 import org.jboss.forge.container.modules.AddonModuleLoader;
 import org.jboss.forge.container.services.ExportedInstance;
 import org.jboss.forge.container.services.ServiceRegistry;
@@ -32,7 +31,6 @@ import org.jboss.modules.Module;
 
 public class AddonRegistryImpl implements AddonRegistry
 {
-   private static Logger logger = Logger.getLogger(AddonRegistryImpl.class.getName());
    private static final String PROP_CONCURRENT_PLUGINS = "forge.concurrentAddons";
    private static final int BATCH_SIZE = Integer.getInteger(PROP_CONCURRENT_PLUGINS, Runtime.getRuntime()
             .availableProcessors());
@@ -106,7 +104,7 @@ public class AddonRegistryImpl implements AddonRegistry
    @Override
    public Future<Addon> start(Addon addon)
    {
-      Assert.notNull(addon, "Addon must not be null.");
+      Assert.notNull(addon, ForgeMessages.MESSAGES.nullNotAllowed("Addon"));
       updateAddons();
       AddonImpl addonImpl = getRegisteredAddon(addon.getId());
 
@@ -118,7 +116,7 @@ public class AddonRegistryImpl implements AddonRegistry
             Future<Addon> future = addonImpl.getFuture();
             if (addonImpl.getMissingDependencies().isEmpty() && future == null)
             {
-               logger.info("Starting addon (" + addon.getId() + ")");
+               ForgeLogger.CONTAINER_IMPL.startingAddOn(addon.getId());
                AddonRunnable runnable = new AddonRunnable(forge, addonImpl);
                future = executor.submit(runnable, addon);
                addonImpl.setRunnable(runnable);
@@ -162,7 +160,7 @@ public class AddonRegistryImpl implements AddonRegistry
             }
             catch (Exception e)
             {
-               logger.log(Level.WARNING, "Failed to shut down addon " + addon, e);
+               ForgeLogger.CONTAINER_IMPL.failedToShutDown(e, addon);
             }
             finally
             {
@@ -201,7 +199,7 @@ public class AddonRegistryImpl implements AddonRegistry
       }
       List<Runnable> waiting = executor.shutdownNow();
       if (waiting != null && !waiting.isEmpty())
-         logger.info("(" + waiting.size() + ") addons were aborted while loading.");
+         ForgeLogger.CONTAINER_IMPL.abortedAddons(waiting.size());
    }
 
    public void updateAddons()
@@ -220,10 +218,7 @@ public class AddonRegistryImpl implements AddonRegistry
 
             for (AddonId entry : incompatible)
             {
-               logger.info("Not loading addon [" + entry.getName()
-                        + "] because it references Forge API version [" + entry.getApiVersion()
-                        + "] which may not be compatible with my current version ["
-                        + AddonRepositoryImpl.getRuntimeAPIVersion() + "].");
+               ForgeLogger.CONTAINER_IMPL.notLoadingAddon(entry.getName(), entry.getApiVersion(), AddonRepositoryImpl.getRuntimeAPIVersion());
             }
          }
 
@@ -310,10 +305,7 @@ public class AddonRegistryImpl implements AddonRegistry
          {
             if (!addon.getStatus().isWaiting())
             {
-               logger.warning("Addon [" + addon + "] has [" + missingDependencies.size()
-                        + "] missing dependencies: "
-                        + missingDependencies + " and will be not be loaded until all required"
-                        + " dependencies are available.");
+               ForgeLogger.CONTAINER_IMPL.addonMissingDependencies(addon, missingDependencies.size(), missingDependencies);
 
                addon.setStatus(Status.WAITING);
 
@@ -334,7 +326,7 @@ public class AddonRegistryImpl implements AddonRegistry
             }
             catch (Exception e)
             {
-               throw new ContainerException("Failed to load addon [" + addonId + "]", e);
+               throw ForgeMessages.MESSAGES.failedToLoadAddon(e, addonId);
             }
          }
       }

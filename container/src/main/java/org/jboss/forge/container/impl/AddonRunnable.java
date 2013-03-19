@@ -2,13 +2,13 @@ package org.jboss.forge.container.impl;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.jboss.forge.container.ContainerControl;
 import org.jboss.forge.container.Forge;
+import org.jboss.forge.container.ForgeLogger;
+import org.jboss.forge.container.ForgeMessages;
 import org.jboss.forge.container.Status;
 import org.jboss.forge.container.event.Perform;
 import org.jboss.forge.container.modules.ModularURLScanner;
@@ -29,7 +29,6 @@ import org.jboss.weld.resources.spi.ResourceLoader;
  */
 public final class AddonRunnable implements Runnable
 {
-   private static final Logger logger = Logger.getLogger(AddonRunnable.class.getName());
 
    private Forge forge;
    private AddonImpl addon;
@@ -54,22 +53,20 @@ public final class AddonRunnable implements Runnable
 
    public void shutdown()
    {
-      logger.info("< Stopping container [" + addon.getId() + "]");
+      ForgeLogger.CONTAINER_IMPL.tracef("< Stopping container [%s]", addon.getId());
       long start = System.currentTimeMillis();
       ClassLoaders.executeIn(addon.getClassLoader(), shutdownCallable);
-      logger.info("<< Stopped container [" + addon.getId() + "] - "
-               + (System.currentTimeMillis() - start) + "ms" + "                    <<");
+      ForgeLogger.CONTAINER_IMPL.tracef("<< Stopped container [%s] - %d ms                    <<", addon.getId(), (System.currentTimeMillis() - start));
    }
 
    @Override
    public void run()
    {
-      logger.info("> Starting container [" + addon.getId() + "]");
+      ForgeLogger.CONTAINER_IMPL.tracef("< Starting container [%s]", addon.getId());
       long start = System.currentTimeMillis();
       container = new AddonContainerStartup();
       shutdownCallable = ClassLoaders.executeIn(addon.getClassLoader(), container);
-      logger.info(">> Started container [" + addon.getId() + "] - "
-               + (System.currentTimeMillis() - start) + "ms" + "                    >>");
+      ForgeLogger.CONTAINER_IMPL.tracef("<< Started container [%s] - %d ms                    <<", addon.getId(), (System.currentTimeMillis() - start));
    }
 
    public AddonImpl getAddon()
@@ -117,7 +114,7 @@ public final class AddonRunnable implements Runnable
                container = weld.initialize();
 
                final BeanManager manager = container.getBeanManager();
-               Assert.notNull(manager, "BeanManager was null");
+               Assert.notNull(manager, ForgeMessages.MESSAGES.nullValue("BeanManager"));
 
                final ContainerControlImpl control = (ContainerControlImpl) BeanManagerUtils.getContextualInstance(
                         manager, ContainerControl.class);
@@ -139,15 +136,15 @@ public final class AddonRunnable implements Runnable
                         ServiceRegistryProducer.class);
                serviceRegistryProducer.setServiceRegistry(new ServiceRegistryImpl(addon, manager, extension));
 
-               Assert.notNull(control, "Container control was null.");
+               Assert.notNull(control, ForgeMessages.MESSAGES.nullValue("Container control"));
 
                ServiceRegistry registry = BeanManagerUtils.getContextualInstance(manager, ServiceRegistry.class);
-               Assert.notNull(registry, "Service registry was null.");
+               Assert.notNull(registry, ForgeMessages.MESSAGES.nullValue("Service registry"));
                addon.setServiceRegistry(registry);
 
                ((AddonRegistryImpl) forge.getAddonRegistry()).clearWaiting(addon);
 
-               logger.info("Services loaded from addon [" + addon.getId() + "] -  " + registry.getServices());
+               ForgeLogger.CONTAINER_IMPL.debugf("Services loaded from addon [%s] -  %s", addon.getId(), registry.getServices());
 
                Callable<Object> listener = new Callable<Object>()
                {
@@ -185,7 +182,7 @@ public final class AddonRunnable implements Runnable
          catch (Exception e)
          {
             addon.setStatus(Status.FAILED);
-            logger.log(Level.WARNING, "Failed to start addon " + addon.getId(), e);
+            ForgeLogger.CONTAINER_IMPL.failedToStart(e, addon.getId());
             throw e;
          }
       }

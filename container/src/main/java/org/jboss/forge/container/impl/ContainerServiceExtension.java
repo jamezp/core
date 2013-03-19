@@ -33,6 +33,8 @@ import javax.enterprise.inject.spi.ProcessInjectionPoint;
 import javax.enterprise.inject.spi.ProcessProducer;
 
 import org.jboss.forge.container.AddonRegistry;
+import org.jboss.forge.container.ForgeLogger;
+import org.jboss.forge.container.ForgeMessages;
 import org.jboss.forge.container.exception.ContainerException;
 import org.jboss.forge.container.services.Exported;
 import org.jboss.forge.container.services.ExportedInstanceInjectionPoint;
@@ -45,7 +47,6 @@ import org.jboss.forge.container.util.cdi.ContextualLifecycle;
 
 public class ContainerServiceExtension implements Extension
 {
-   private static Logger logger = Logger.getLogger(ContainerServiceExtension.class.getName());
 
    private Map<Class<?>, AnnotatedType<?>> services = new HashMap<Class<?>, AnnotatedType<?>>();
    private Map<InjectionPoint, Class<?>> requestedServices = new HashMap<InjectionPoint, Class<?>>();
@@ -87,7 +88,7 @@ public class ContainerServiceExtension implements Extension
       }
       else if (exported != null)
       {
-         logger.fine("Not @Exported type " + annotated);
+         ForgeLogger.CONTAINER_IMPL.debugf("Not @Exported type %s", annotated);
       }
    }
 
@@ -149,8 +150,7 @@ public class ContainerServiceExtension implements Extension
                         }
                         else
                         {
-                           throw new ContainerException(
-                                    "Cannot handle producer for non-Field and non-Method member type: " + member);
+                           throw ForgeMessages.MESSAGES.cannotHandleProducer(member);
                         }
 
                         return ExportedInstanceLazyLoader.create(

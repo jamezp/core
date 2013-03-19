@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Logger;
 
 import org.jboss.forge.container.exception.ContainerException;
 import org.jboss.forge.container.impl.AddonRegistryImpl;
@@ -21,7 +20,6 @@ import org.jboss.modules.log.StreamModuleLogger;
 
 public class ForgeImpl implements Forge
 {
-   private static Logger logger = Logger.getLogger(ForgeImpl.class.getName());
 
    private volatile boolean alive = false;
    private boolean serverMode = true;
@@ -32,8 +30,7 @@ public class ForgeImpl implements Forge
    public ForgeImpl()
    {
       if (!AddonRepositoryImpl.hasRuntimeAPIVersion())
-         logger.warning("Could not detect Forge runtime version - " +
-                  "loading all addons, but failures may occur if versions are not compatible.");
+         ForgeLogger.CONTAINER.couldNotDetectRuntimeVersion();
    }
 
    public Forge enableLogging()

@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.jboss.forge.container.ForgeLogger;
 import org.jboss.forge.container.modules.ModuleSpecProvider;
 import org.jboss.modules.DependencySpec;
 import org.jboss.modules.ModuleIdentifier;
@@ -94,7 +95,7 @@ public abstract class BaseModuleSpecProvider implements ModuleSpecProvider
          }
          catch (IOException e)
          {
-            System.out.println("Failed loading paths from: [" + url.toString() + "]. Attempting folder discovery");
+            ForgeLogger.CONTAINER.failedLoadingPaths(url.toString());
          }
          catch (URISyntaxException e)
          {
@@ -562,6 +563,7 @@ public abstract class BaseModuleSpecProvider implements ModuleSpecProvider
       systemPaths.add("org/jboss/forge/parser/xml/util");
       systemPaths.add("org/jboss/forge/proxy");
       systemPaths.add("org/jboss/forge/test");
+      systemPaths.add("org/jboss/logging");
       systemPaths.add("org/jboss/modules");
       systemPaths.add("org/jboss/modules/filter");
       systemPaths.add("org/jboss/modules/log");
